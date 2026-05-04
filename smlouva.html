@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS AUTO — Smlouva o konzultační podpoře</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #141414;
+    --dark: #1A1A1A;
+    --panel: #1F1F1F;
+    --border: #2E2E2E;
+    --steel: #C8C8C8;
+    --white: #F2F2F2;
+    --dim: #888888;
+    --red: #C41A1A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+
+  /* PRINT STYLES */
+  @media print {
+    body { background: white; color: #111; }
+    nav, .no-print { display: none !important; }
+    .wrapper { padding: 20px; max-width: 100%; }
+    .contract-block { background: #f8f8f8; border-color: #ccc; }
+    .field { background: white; border-color: #999; color: #111; }
+    .field-label { color: #555; }
+    .section-title { color: #111; }
+    .section-num { color: #C41A1A; }
+    p, li { color: #222 !important; }
+    .sig-box { background: #f8f8f8; border-color: #ccc; }
+    .sig-line { border-color: #999; }
+  }
+
+  nav {
+    position: sticky;
+    top: 0;
+    background: rgba(20,20,20,0.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .nav-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+  .logo-ds {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    color: var(--white);
+    letter-spacing: -2px;
+  }
+  .logo-ds span { color: var(--dim); }
+  .logo-auto {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--steel);
+    letter-spacing: 5px;
+    margin-left: 8px;
+  }
+  .nav-actions { display: flex; gap: 12px; align-items: center; }
+  .btn-nav {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid var(--border);
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-nav:hover { color: var(--white); border-color: var(--steel); }
+  .btn-nav.primary { background: var(--red); color: var(--white); border-color: var(--red); }
+  .btn-nav.primary:hover { background: #e02020; }
+
+  .wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+
+  .page-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    color: var(--red);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .page-label::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--red);
+  }
+  .page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(36px, 5vw, 60px);
+    line-height: 1;
+    letter-spacing: -1px;
+    margin-bottom: 40px;
+  }
+
+  /* CONTRACT FIELDS */
+  .contract-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 32px 36px;
+    margin-bottom: 32px;
+  }
+
+  .block-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 32px;
+  }
+  @media (max-width: 600px) {
+    .fields-grid { grid-template-columns: 1fr; }
+    .wrapper { padding: 40px 20px 72px; }
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-group.full { grid-column: 1 / -1; }
+
+  .field-label {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .field {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-bottom: 1px solid var(--steel);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .field:focus { border-color: var(--steel); border-bottom-color: var(--red); }
+  .field::placeholder { color: var(--dim); font-weight: 300; }
+
+  select.field option { background: var(--panel); }
+
+  textarea.field { min-height: 80px; resize: vertical; }
+
+  /* CONTRACT TEXT */
+  .contract-text {
+    margin-bottom: 32px;
+  }
+
+  .section-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 28px;
+  }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--white);
+    margin-bottom: 14px;
+  }
+
+  .contract-text p {
+    font-size: 14px;
+    color: var(--steel);
+    margin-bottom: 10px;
+    line-height: 1.8;
+  }
+
+  .contract-text ul {
+    list-style: none;
+    margin: 8px 0 12px;
+  }
+  .contract-text ul li {
+    font-size: 14px;
+    color: var(--steel);
+    padding: 6px 0 6px 18px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    line-height: 1.7;
+  }
+  .contract-text ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--red);
+  }
+  .contract-text ul li:last-child { border-bottom: none; }
+
+  .highlight-box {
+    border-left: 2px solid var(--red);
+    background: rgba(196,26,26,0.05);
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .highlight-box p { color: var(--white) !important; font-weight: 400; }
+
+  /* SIGNATURE */
+  .sig-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 40px;
+  }
+  @media (max-width: 600px) { .sig-grid { grid-template-columns: 1fr; } }
+
+  .sig-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px 24px 32px;
+  }
+  .sig-role {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .sig-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--white);
+    margin-bottom: 40px;
+  }
+  .sig-line {
+    border-top: 1px solid var(--steel);
+    padding-top: 8px;
+    font-size: 12px;
+    color: var(--dim);
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+
+  .btn-action {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 14px 32px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-action.primary { background: var(--red); color: var(--white); }
+  .btn-action.primary:hover { background: #e02020; }
+  .btn-action.ghost { background: transparent; color: var(--steel); border: 1px solid var(--border); }
+  .btn-action.ghost:hover { border-color: var(--steel); color: var(--white); }
+
+  .contract-number {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    margin-bottom: 32px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<nav class="no-print">
+  <div class="nav-inner">
+    <div style="display:flex;align-items:baseline;">
+      <span class="logo-ds">D<span>S</span></span>
+      <span class="logo-auto">AUTO</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-nav" onclick="window.print()">Tisknout / PDF</button>
+      <a href="ds-auto-web.html" class="btn-nav">← Zpět</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrapper">
+  <div class="page-label">Interní dokumenty</div>
+  <h1 class="page-title">Smlouva o konzultační<br>podpoře</h1>
+
+  <div class="contract-number">
+    Číslo smlouvy: <strong id="contractNum">DS-<span id="numYear"></span>-<span id="numSeq">001</span></strong>
+    &nbsp;&nbsp;·&nbsp;&nbsp;
+    Datum: <strong id="contractDate"></strong>
+  </div>
+
+  <!-- SMLUVNÍ STRANY -->
+  <div class="contract-block">
+    <div class="block-title">Smluvní strany</div>
+
+    <div style="margin-bottom: 24px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:12px;">Poskytovatel</div>
+      <div class="fields-grid">
+        <div class="field-group">
+          <label class="field-label">Jméno a příjmení</label>
+          <input class="field" type="text" value="David Stodůlka" readonly>
+        </div>
+        <div class="field-group">
+          <label class="field-label">IČO</label>
+          <input class="field" type="text" id="icoField" placeholder="DOPLNIT" value="">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Sídlo</label>
+          <input class="field" type="text" id="sidloField" placeholder="DOPLNIT" value="">
+        </div>
+        <div class="field-group">
+          <label class="field-label">E-mail</label>
+          <input class="field" type="text" value="info@dsauto.cz" readonly>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:4px;color:var(--red);text-transform:uppercase;margin-bottom:12px;">Klient</div>
+      <div class="fields-grid">
+        <div class="field-group">
+          <label class="field-label">Jméno a příjmení / Název firmy</label>
+          <input class="field" type="text" id="klientJmeno" placeholder="Jan Novák">
+        </div>
+        <div class="field-group">
+          <label class="field-label">IČO (pokud je podnikatel)</label>
+          <input class="field" type="text" id="klientIco" placeholder="Nevyplňovat u spotřebitele">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Adresa / Sídlo</label>
+          <input class="field" type="text" id="klientAdresa" placeholder="Ulice, město, PSČ">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Telefon</label>
+          <input class="field" type="text" id="klientTel" placeholder="+420 000 000 000">
+        </div>
+        <div class="field-group full">
+          <label class="field-label">E-mail</label>
+          <input class="field" type="text" id="klientEmail" placeholder="email@example.cz">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PŘEDMĚT SMLOUVY -->
+  <div class="contract-block">
+    <div class="block-title">Předmět smlouvy</div>
+    <div class="fields-grid">
+      <div class="field-group">
+        <label class="field-label">Typ služby</label>
+        <select class="field" id="typSluzby">
+          <option value="remote">Remote analýza — 999 Kč</option>
+          <option value="fyzicka">Fyzická prohlídka — 3 499 Kč + cestovné</option>
+          <option value="zastupovani">Zastupování při koupi vozidla</option>
+          <option value="dovoz">Asistence při dovozu vozidla</option>
+          <option value="kombinace">Kombinace služeb — dle dohody</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Celková cena (Kč)</label>
+        <input class="field" type="text" id="cenaField" placeholder="999">
+      </div>
+      <div class="field-group">
+        <label class="field-label">VIN vozidla</label>
+        <input class="field" type="text" id="vinField" placeholder="VIN číslo">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Vozidlo</label>
+        <input class="field" type="text" id="vozidloField" placeholder="Značka, model, rok, SPZ">
+      </div>
+      <div class="field-group full">
+        <label class="field-label">Místo prohlídky / URL inzerátu</label>
+        <input class="field" type="text" id="mistoField" placeholder="Adresa nebo odkaz na inzerát">
+      </div>
+      <div class="field-group full">
+        <label class="field-label">Upřesnění a poznámky</label>
+        <textarea class="field" id="poznamkyField" placeholder="Specifické požadavky, dohodnuté podmínky..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEXT SMLOUVY -->
+  <div class="contract-text">
+
+    <div class="section-num">Článek 1</div>
+    <div class="section-title">Předmět a charakter plnění</div>
+    <p>Poskytovatel se zavazuje poskytnout Klientovi konzultační podporu v rozsahu dle zvolené služby (viz výše). Veškeré výstupy mají charakter informační a konzultační podpory a nepředstavují znalecký posudek ani závazné doporučení ve smyslu zvláštních právních předpisů.</p>
+
+    <div class="highlight-box">
+      <p><strong>Klient bere na vědomí, že veškerá stanoviska, hodnocení a doporučení Poskytovatele slouží výhradně jako podpora při jeho vlastním rozhodování. Konečné rozhodnutí o koupi nebo odmítnutí vozidla je výhradně a plně na Klientovi.</strong></p>
+    </div>
+
+    <p>Odpovědnost Poskytovatele za případnou škodu vzniklou v přímé souvislosti s vadou poskytnuté služby je omezena na výši uhrazené ceny za tuto konkrétní službu.</p>
+
+    <div class="section-num">Článek 2</div>
+    <div class="section-title">Rozsah fyzické prohlídky</div>
+    <p>Fyzická prohlídka je prováděna vizuálně a dostupnými diagnostickými prostředky (tloušťkoměr laku, OBD diagnostika). Nezahrnuje demontáž součástí ani jiné invazivní metody. Závěry platí pro stav vozidla v době prohlídky.</p>
+
+    <div class="section-num">Článek 3</div>
+    <div class="section-title">Zprostředkovatelská asistence</div>
+    <p>Je-li předmětem smlouvy zastupování při koupi nebo asistence při dovozu, Poskytovatel vystupuje výhradně jako zástupce a poradce Klienta. Smlouvu o koupi vozidla uzavírá vždy Klient sám nebo na základě plné moci. Poskytovatel neodpovídá za jednání prodejce, stav vozidla ani za podmínky kupní smlouvy.</p>
+
+    <div class="section-num">Článek 4</div>
+    <div class="section-title">Platební podmínky</div>
+    <p>Cena je splatná dle dohody — předem bankovním převodem, nebo v hotovosti. Cestovné u fyzické prohlídky se hradí dle skutečně ujetých kilometrů za sazbu dohodnutou před zahájením služby. Poskytovatel není plátcem DPH.</p>
+
+    <div class="section-num">Článek 5</div>
+    <div class="section-title">Závěrečná ustanovení</div>
+    <p>Tato smlouva se řídí právním řádem České republiky. Není-li v této smlouvě stanoveno jinak, platí Všeobecné obchodní podmínky Poskytovatele dostupné na <strong>dsauto.cz/vop</strong>. Smlouva nabývá účinnosti podpisem obou smluvních stran nebo uhrazením ceny Klientem.</p>
+
+  </div>
+
+  <!-- PODPISY -->
+  <div class="sig-grid">
+    <div class="sig-box">
+      <div class="sig-role">Poskytovatel</div>
+      <div class="sig-name">David Stodůlka</div>
+      <div class="sig-line">Podpis · Datum</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-role">Klient</div>
+      <div class="sig-name" id="sigKlient">———</div>
+      <div class="sig-line">Podpis · Datum</div>
+    </div>
+  </div>
+
+  <div class="actions no-print">
+    <button class="btn-action primary" onclick="window.print()">Tisknout / Uložit PDF</button>
+    <button class="btn-action ghost" onclick="clearForm()">Vymazat formulář</button>
+  </div>
+
+</div>
+
+<script>
+  // Auto contract number + date
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth()+1).padStart(2,'0');
+  const day = String(now.getDate()).padStart(2,'0');
+
+  document.getElementById('numYear').textContent = year;
+  document.getElementById('contractDate').textContent = `${day}. ${month}. ${year}`;
+
+  // Increment seq from localStorage
+  let seq = parseInt(localStorage.getItem('ds_contract_seq') || '0') + 1;
+  localStorage.setItem('ds_contract_seq', seq);
+  document.getElementById('numSeq').textContent = String(seq).padStart(3,'0');
+
+  // Sync klient name to signature
+  document.getElementById('klientJmeno').addEventListener('input', function() {
+    document.getElementById('sigKlient').textContent = this.value || '———';
+  });
+
+  // Auto fill price based on service type
+  document.getElementById('typSluzby').addEventListener('change', function() {
+    const prices = {
+      remote: '999',
+      fyzicka: '3 499 + cestovné',
+      zastupovani: '',
+      dovoz: '',
+      kombinace: ''
+    };
+    document.getElementById('cenaField').value = prices[this.value] || '';
+  });
+
+  function clearForm() {
+    if (confirm('Vymazat celý formulář?')) {
+      document.querySelectorAll('.field:not([readonly])').forEach(f => f.value = '');
+      document.getElementById('sigKlient').textContent = '———';
+    }
+  }
+</script>
+
+</body>
+</html>

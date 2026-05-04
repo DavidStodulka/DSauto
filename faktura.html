@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS AUTO — Faktura</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #141414;
+    --dark: #1A1A1A;
+    --panel: #1F1F1F;
+    --border: #2E2E2E;
+    --steel: #C8C8C8;
+    --white: #F2F2F2;
+    --dim: #888888;
+    --red: #C41A1A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  @media print {
+    body { background: white; color: #111; }
+    nav, .no-print { display: none !important; }
+    .wrapper { padding: 0; max-width: 100%; }
+    .invoice-preview { background: white; box-shadow: none; padding: 32px; }
+    .field { background: white; color: #111; border-color: #ccc; }
+    .field-label { color: #555; }
+    .form-panel { display: none !important; }
+    .invoice-preview { display: block !important; }
+  }
+
+  nav {
+    position: sticky;
+    top: 0;
+    background: rgba(20,20,20,0.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+  .logo-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 26px;
+    color: var(--white);
+    letter-spacing: -1px;
+  }
+  .logo-text span { color: var(--dim); }
+  .nav-badge {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-left: 8px;
+  }
+  .nav-actions { display: flex; gap: 10px; }
+  .btn {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 7px 18px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn:hover { color: var(--white); border-color: var(--steel); }
+  .btn.primary { background: var(--red); color: var(--white); border-color: var(--red); }
+  .btn.primary:hover { background: #e02020; }
+
+  .wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* FORM PANEL */
+  .form-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .panel-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px 28px;
+  }
+
+  .panel-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+  .field-group:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .field {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-bottom: 1px solid var(--steel);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .field:focus { border-bottom-color: var(--red); }
+  .field::placeholder { color: var(--dim); font-weight: 300; }
+  select.field option { background: var(--panel); }
+
+  /* ITEMS TABLE */
+  .items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+  }
+  .items-table th {
+    font-size: 9px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .items-table td {
+    padding: 6px 8px;
+  }
+  .item-input {
+    background: var(--dark);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    padding: 6px 8px;
+    outline: none;
+    width: 100%;
+  }
+  .item-input:focus { border-color: var(--steel); }
+  .item-remove {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .item-remove:hover { background: var(--red); color: white; border-color: var(--red); }
+
+  /* INVOICE PREVIEW */
+  .invoice-preview {
+    background: white;
+    color: #111;
+    padding: 48px 52px;
+    font-family: 'Barlow', sans-serif;
+    min-height: 600px;
+    position: sticky;
+    top: 80px;
+  }
+
+  .inv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid #111;
+  }
+
+  .inv-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 40px;
+    letter-spacing: -2px;
+    color: #111;
+    line-height: 1;
+  }
+  .inv-logo-sub {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: #C41A1A;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .inv-type {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    color: #111;
+    letter-spacing: -1px;
+    text-align: right;
+  }
+  .inv-number {
+    font-size: 13px;
+    color: #666;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .inv-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 40px;
+  }
+
+  .inv-party-label {
+    font-size: 9px;
+    color: #999;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .inv-party-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: #111;
+    margin-bottom: 4px;
+  }
+
+  .inv-party-detail {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  .inv-dates {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 32px;
+    padding: 16px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+  }
+
+  .inv-date-item { display: flex; flex-direction: column; gap: 3px; }
+  .inv-date-label { font-size: 10px; color: #999; letter-spacing: 2px; text-transform: uppercase; }
+  .inv-date-value { font-weight: 500; font-size: 14px; color: #111; }
+
+  .inv-items {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+  }
+  .inv-items th {
+    font-size: 10px;
+    color: #999;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+  }
+  .inv-items th:last-child { text-align: right; }
+  .inv-items td {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+    color: #333;
+    vertical-align: top;
+  }
+  .inv-items td:last-child { text-align: right; font-weight: 500; white-space: nowrap; }
+
+  .inv-total-section {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .inv-total-table {
+    min-width: 240px;
+  }
+  .inv-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    color: #555;
+  }
+  .inv-total-row.final {
+    border-top: 2px solid #111;
+    border-bottom: none;
+    padding-top: 12px;
+    margin-top: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    color: #111;
+  }
+
+  .inv-payment {
+    margin-top: 32px;
+    padding: 20px 24px;
+    background: #f8f8f8;
+    border-left: 3px solid #C41A1A;
+  }
+  .inv-payment-title {
+    font-size: 10px;
+    color: #999;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .inv-payment-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .inv-payment-row strong { color: #111; }
+
+  .inv-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    font-size: 11px;
+    color: #999;
+    line-height: 1.7;
+  }
+
+  .qr-placeholder {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #ccc;
+    text-align: center;
+    float: right;
+    margin-top: -60px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="no-print">
+  <div class="nav-inner">
+    <div style="display:flex;align-items:baseline;">
+      <span class="logo-text">D<span>S</span></span>
+      <span class="nav-badge">Faktura</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn primary" onclick="window.print()">Tisknout / PDF</button>
+      <button class="btn" onclick="resetForm()">Nová faktura</button>
+      <a href="ds-auto-web.html" class="btn">← Web</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrapper">
+  <div class="main-grid">
+
+    <!-- FORM -->
+    <div class="form-panel no-print">
+
+      <div class="panel-block">
+        <div class="panel-title">Číslo faktury</div>
+        <div class="field-group">
+          <label class="field-label">Číslo</label>
+          <input class="field" type="text" id="f_cislo" oninput="update()">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="field-group">
+            <label class="field-label">Datum vystavení</label>
+            <input class="field" type="date" id="f_datum" oninput="update()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Datum splatnosti</label>
+            <input class="field" type="date" id="f_splatnost" oninput="update()">
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-title">Dodavatel (Vy)</div>
+        <div class="field-group">
+          <label class="field-label">Jméno a příjmení</label>
+          <input class="field" type="text" id="f_dodavatel_jmeno" value="David Stodůlka" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">IČO</label>
+          <input class="field" type="text" id="f_dodavatel_ico" placeholder="DOPLNIT" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Sídlo</label>
+          <input class="field" type="text" id="f_dodavatel_sidlo" placeholder="Ulice, město, PSČ" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">E-mail</label>
+          <input class="field" type="text" id="f_dodavatel_email" value="info@dsauto.cz" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Telefon</label>
+          <input class="field" type="text" id="f_dodavatel_tel" placeholder="+420 000 000 000" oninput="update()">
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-title">Odběratel (Klient)</div>
+        <div class="field-group">
+          <label class="field-label">Jméno / Firma</label>
+          <input class="field" type="text" id="f_klient_jmeno" placeholder="Jan Novák" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">IČO (pokud firma)</label>
+          <input class="field" type="text" id="f_klient_ico" placeholder="Nevyplňovat u fyzické osoby" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Adresa</label>
+          <input class="field" type="text" id="f_klient_adresa" placeholder="Ulice, město, PSČ" oninput="update()">
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-title">Platební údaje</div>
+        <div class="field-group">
+          <label class="field-label">Číslo účtu</label>
+          <input class="field" type="text" id="f_ucet" placeholder="1234567890/0800" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Variabilní symbol</label>
+          <input class="field" type="text" id="f_vs" oninput="update()">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Způsob úhrady</label>
+          <select class="field" id="f_uhrada" onchange="update()">
+            <option>Bankovní převod</option>
+            <option>Hotovost</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="panel-block">
+        <div class="panel-title">Položky</div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width:50%">Popis</th>
+              <th style="width:15%">Jedn.</th>
+              <th style="width:20%">Cena/jedn.</th>
+              <th style="width:10%"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody"></tbody>
+        </table>
+        <button class="btn" onclick="addItem()" style="width:100%;margin-top:4px;">+ Přidat položku</button>
+      </div>
+
+    </div><!-- /form-panel -->
+
+    <!-- INVOICE PREVIEW -->
+    <div class="invoice-preview" id="invoicePreview">
+      <!-- generováno JS -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===================== INIT =====================
+const now = new Date();
+const year = now.getFullYear();
+const month = String(now.getMonth()+1).padStart(2,'0');
+const day = String(now.getDate()).padStart(2,'0');
+
+// Auto invoice number
+let invSeq = parseInt(localStorage.getItem('ds_inv_seq') || '0') + 1;
+localStorage.setItem('ds_inv_seq', invSeq);
+const invNum = `${year}${String(invSeq).padStart(3,'0')}`;
+
+// Splatnost = dnes + 14 dní
+const splatnost = new Date(now.getTime() + 14*24*60*60*1000);
+const splatnostStr = splatnost.toISOString().split('T')[0];
+
+document.getElementById('f_cislo').value = invNum;
+document.getElementById('f_datum').value = `${year}-${month}-${day}`;
+document.getElementById('f_splatnost').value = splatnostStr;
+document.getElementById('f_vs').value = invNum;
+
+// Default items
+let items = [
+  { popis: 'Remote analýza vozidla', mnozstvi: 1, cena: 999 }
+];
+
+function renderItems() {
+  const tbody = document.getElementById('itemsBody');
+  tbody.innerHTML = '';
+  items.forEach((item, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="item-input" value="${item.popis}" oninput="items[${i}].popis=this.value;update()"></td>
+      <td><input class="item-input" type="number" value="${item.mnozstvi}" min="1" style="width:50px" oninput="items[${i}].mnozstvi=parseFloat(this.value)||1;update()"></td>
+      <td><input class="item-input" type="number" value="${item.cena}" oninput="items[${i}].cena=parseFloat(this.value)||0;update()"></td>
+      <td><button class="item-remove" onclick="removeItem(${i})">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function addItem() {
+  items.push({ popis: '', mnozstvi: 1, cena: 0 });
+  renderItems();
+  update();
+}
+
+function removeItem(i) {
+  items.splice(i, 1);
+  renderItems();
+  update();
+}
+
+// ===================== RENDER INVOICE =====================
+function g(id) { return document.getElementById(id)?.value || ''; }
+
+function formatCzk(n) {
+  return Math.round(n).toLocaleString('cs-CZ') + ' Kč';
+}
+
+function formatDate(str) {
+  if (!str) return '—';
+  const [y,m,d] = str.split('-');
+  return `${d}. ${m}. ${y}`;
+}
+
+function update() {
+  const total = items.reduce((sum, i) => sum + (i.mnozstvi * i.cena), 0);
+
+  const itemRows = items.map(item => `
+    <tr>
+      <td>${item.popis || '—'}</td>
+      <td style="text-align:center">${item.mnozstvi}×</td>
+      <td style="text-align:right">${formatCzk(item.cena)}</td>
+      <td>${formatCzk(item.mnozstvi * item.cena)}</td>
+    </tr>
+  `).join('');
+
+  const klientIco = g('f_klient_ico');
+  const dodavatelIco = g('f_dodavatel_ico');
+
+  document.getElementById('invoicePreview').innerHTML = `
+    <div class="inv-header">
+      <div>
+        <div class="inv-logo">DS AUTO</div>
+        <div class="inv-logo-sub">Bez keců · dsauto.cz</div>
+      </div>
+      <div>
+        <div class="inv-type">FAKTURA</div>
+        <div class="inv-number">č. ${g('f_cislo') || '—'}</div>
+      </div>
+    </div>
+
+    <div class="inv-parties">
+      <div>
+        <div class="inv-party-label">Dodavatel</div>
+        <div class="inv-party-name">${g('f_dodavatel_jmeno') || 'David Stodůlka'}</div>
+        <div class="inv-party-detail">
+          ${dodavatelIco ? `IČO: ${dodavatelIco}<br>` : ''}
+          ${g('f_dodavatel_sidlo') ? g('f_dodavatel_sidlo') + '<br>' : ''}
+          ${g('f_dodavatel_email') || 'info@dsauto.cz'}<br>
+          ${g('f_dodavatel_tel') || ''}
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#999;font-style:italic;">Není plátce DPH</div>
+      </div>
+      <div>
+        <div class="inv-party-label">Odběratel</div>
+        <div class="inv-party-name">${g('f_klient_jmeno') || '—'}</div>
+        <div class="inv-party-detail">
+          ${klientIco ? `IČO: ${klientIco}<br>` : ''}
+          ${g('f_klient_adresa') || ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-dates">
+      <div class="inv-date-item">
+        <div class="inv-date-label">Datum vystavení</div>
+        <div class="inv-date-value">${formatDate(g('f_datum'))}</div>
+      </div>
+      <div class="inv-date-item">
+        <div class="inv-date-label">Datum splatnosti</div>
+        <div class="inv-date-value" style="color:${g('f_splatnost') < new Date().toISOString().split('T')[0] ? '#C41A1A' : '#111'}">${formatDate(g('f_splatnost'))}</div>
+      </div>
+      <div class="inv-date-item">
+        <div class="inv-date-label">Způsob úhrady</div>
+        <div class="inv-date-value">${g('f_uhrada')}</div>
+      </div>
+      <div class="inv-date-item">
+        <div class="inv-date-label">Variabilní symbol</div>
+        <div class="inv-date-value">${g('f_vs') || g('f_cislo') || '—'}</div>
+      </div>
+    </div>
+
+    <table class="inv-items">
+      <thead>
+        <tr>
+          <th style="width:55%">Popis</th>
+          <th style="width:10%;text-align:center">Jedn.</th>
+          <th style="width:17%;text-align:right">Cena/jedn.</th>
+          <th style="width:18%;text-align:right">Celkem</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+
+    <div class="inv-total-section">
+      <div class="inv-total-table">
+        <div class="inv-total-row">
+          <span>Mezisoučet</span>
+          <span>${formatCzk(total)}</span>
+        </div>
+        <div class="inv-total-row">
+          <span>DPH (nejsem plátce)</span>
+          <span>0 Kč</span>
+        </div>
+        <div class="inv-total-row final">
+          <span>K úhradě</span>
+          <span>${formatCzk(total)}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-payment" style="margin-top:32px;">
+      <div class="inv-payment-title">Platební instrukce</div>
+      <div class="inv-payment-row"><span>Číslo účtu</span><strong>${g('f_ucet') || 'DOPLNIT'}</strong></div>
+      <div class="inv-payment-row"><span>Variabilní symbol</span><strong>${g('f_vs') || g('f_cislo') || '—'}</strong></div>
+      <div class="inv-payment-row"><span>Částka</span><strong>${formatCzk(total)}</strong></div>
+      <div class="inv-payment-row"><span>Splatnost</span><strong>${formatDate(g('f_splatnost'))}</strong></div>
+    </div>
+
+    <div class="inv-footer">
+      Faktura vystavena dle § 26 zákona č. 235/2004 Sb. Dodavatel není plátce DPH dle § 6 téhož zákona.<br>
+      DS AUTO · David Stodůlka · info@dsauto.cz · dsauto.cz
+    </div>
+  `;
+}
+
+function resetForm() {
+  if (confirm('Vytvořit novou fakturu? Aktuální data budou vymazána.')) {
+    location.reload();
+  }
+}
+
+// Init
+renderItems();
+update();
+</script>
+</body>
+</html>

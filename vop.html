@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS AUTO — Všeobecné obchodní podmínky</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #141414;
+    --dark: #1A1A1A;
+    --panel: #1F1F1F;
+    --border: #2E2E2E;
+    --steel: #C8C8C8;
+    --white: #F2F2F2;
+    --dim: #888888;
+    --red: #C41A1A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+  nav {
+    position: sticky;
+    top: 0;
+    background: rgba(20,20,20,0.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .nav-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+  .logo-ds {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 28px;
+    color: var(--white);
+    letter-spacing: -2px;
+    text-decoration: none;
+  }
+  .logo-ds span { color: var(--dim); }
+  .logo-auto {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--steel);
+    letter-spacing: 5px;
+    margin-left: 8px;
+  }
+  .nav-back {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--white); }
+
+  .wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 72px 32px 96px;
+  }
+
+  .page-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 6px;
+    color: var(--red);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .page-label::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: var(--red);
+  }
+
+  .page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: clamp(40px, 6vw, 72px);
+    line-height: 1;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  .page-meta {
+    font-size: 13px;
+    color: var(--dim);
+    letter-spacing: 1px;
+    margin-bottom: 56px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .vop-section {
+    margin-bottom: 48px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .vop-section:last-child { border-bottom: none; }
+
+  .vop-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 5px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .vop-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--white);
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .vop-body p {
+    font-size: 15px;
+    color: var(--steel);
+    margin-bottom: 14px;
+    line-height: 1.85;
+  }
+  .vop-body p:last-child { margin-bottom: 0; }
+
+  .vop-body strong {
+    color: var(--white);
+    font-weight: 500;
+  }
+
+  .vop-body ul {
+    list-style: none;
+    margin: 12px 0;
+  }
+  .vop-body ul li {
+    font-size: 15px;
+    color: var(--steel);
+    padding: 7px 0 7px 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    line-height: 1.7;
+  }
+  .vop-body ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--red);
+    font-weight: 700;
+  }
+  .vop-body ul li:last-child { border-bottom: none; }
+
+  .highlight-box {
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--red);
+    background: var(--panel);
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+  .highlight-box p {
+    font-size: 14px;
+    color: var(--steel);
+    margin: 0;
+    line-height: 1.7;
+  }
+
+  .provider-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 28px 32px;
+    margin-bottom: 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 40px;
+  }
+  @media (max-width: 600px) {
+    .provider-box { grid-template-columns: 1fr; }
+    .wrapper { padding: 48px 20px 72px; }
+  }
+  .provider-row { display: flex; flex-direction: column; gap: 4px; }
+  .provider-label {
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .provider-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--white);
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 32px;
+    text-align: center;
+  }
+  .footer-copy { font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="ds-auto-web.html" style="display:flex;align-items:baseline;text-decoration:none;">
+      <span class="logo-ds">D<span>S</span></span>
+      <span class="logo-auto">AUTO</span>
+    </a>
+    <a href="ds-auto-web.html" class="nav-back">← Zpět na web</a>
+  </div>
+</nav>
+
+<div class="wrapper">
+
+  <div class="page-label">Právní dokumenty</div>
+  <h1 class="page-title">Všeobecné obchodní podmínky</h1>
+  <div class="page-meta">Platné od 1. 1. 2025 · Poslední aktualizace: 1. 1. 2025</div>
+
+  <!-- POSKYTOVATEL -->
+  <div class="provider-box">
+    <div class="provider-row">
+      <span class="provider-label">Poskytovatel</span>
+      <span class="provider-value">David Stodůlka</span>
+    </div>
+    <div class="provider-row">
+      <span class="provider-label">IČO</span>
+      <span class="provider-value">DOPLNIT</span>
+    </div>
+    <div class="provider-row">
+      <span class="provider-label">Sídlo</span>
+      <span class="provider-value">DOPLNIT</span>
+    </div>
+    <div class="provider-row">
+      <span class="provider-label">E-mail</span>
+      <span class="provider-value">info@dsauto.cz</span>
+    </div>
+    <div class="provider-row">
+      <span class="provider-label">Telefon</span>
+      <span class="provider-value">DOPLNIT</span>
+    </div>
+    <div class="provider-row">
+      <span class="provider-label">Není plátce DPH</span>
+      <span class="provider-value">§ 6 zákona č. 235/2004 Sb.</span>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 1</div>
+    <div class="vop-title">Úvodní ustanovení a definice</div>
+    <div class="vop-body">
+      <p>Tyto Všeobecné obchodní podmínky (dále jen „VOP") upravují práva a povinnosti mezi poskytovatelem služeb Davidem Stodůlkou, IČO: DOPLNIT, se sídlem DOPLNIT (dále jen „Poskytovatel") a fyzickými či právnickými osobami, které využívají jeho služeb (dále jen „Klient").</p>
+      <p>Uzavřením objednávky, uhrazením zálohy nebo platby za službu Klient potvrzuje, že se s těmito VOP seznámil a souhlasí s jejich zněním.</p>
+      <p><strong>Definice pojmů:</strong></p>
+      <ul>
+        <li><strong>Konzultační podpora</strong> — poskytnutí informací, doporučení a stanoviska Poskytovatele na základě dostupných podkladů v době zpracování, bez záruky úplnosti nebo právní závaznosti.</li>
+        <li><strong>Remote analýza</strong> — konzultační podpora poskytovaná na dálku na základě VIN, fotografií a jiných podkladů dodaných Klientem, bez fyzického kontaktu s vozidlem.</li>
+        <li><strong>Fyzická prohlídka</strong> — konzultační podpora provedená osobním kontaktem s vozidlem za použití dostupného vybavení Poskytovatele.</li>
+        <li><strong>Zprostředkovatelská podpora</strong> — asistence Poskytovatele při vyhledání, prověření nebo zastupování Klienta při koupi či dovozu vozidla, vždy na základě samostatné smlouvy.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 2</div>
+    <div class="vop-title">Charakter poskytovaných služeb</div>
+    <div class="vop-body">
+      <div class="highlight-box">
+        <p><strong>Veškeré služby Poskytovatele mají výhradně charakter konzultační podpory a informační pomoci.</strong> Nepředstavují znalecký posudek, odborný posudek ve smyslu zákona č. 254/2019 Sb. o znalcích, znaleckých kancelářích a znaleckých ústavech, ani jakékoliv závazné doporučení nebo záruku stavu vozidla.</p>
+      </div>
+      <p>Závěry, hodnocení a doporučení Poskytovatele vycházejí výhradně z informací a podkladů dostupných v době zpracování. Poskytovatel není odpovědný za skutečnosti, které nebyly z dodaných podkladů zjistitelné, ani za změny stavu vozidla po provedení služby.</p>
+      <p><strong>Konečné rozhodnutí o koupi, odmítnutí nebo jiném naložení s vozidlem je výhradně a plně na Klientovi.</strong> Klient bere na vědomí, že služba slouží jako doplňková podpora při jeho vlastním rozhodování, nikoliv jako náhrada za jeho vlastní uvážení.</p>
+      <p>Poskytovatel nevydává prohlášení o technickém stavu vozidla, nezaručuje absenci skrytých vad a nepřebírá odpovědnost za budoucí poruchy, vady nebo náklady spojené s provozem vozidla.</p>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 3</div>
+    <div class="vop-title">Objednávka a uzavření smlouvy</div>
+    <div class="vop-body">
+      <p>Objednávka služby je podána prostřednictvím kontaktního formuláře na webových stránkách, e-mailem, telefonicky nebo prostřednictvím sociálních sítí Poskytovatele.</p>
+      <p>Smlouva o poskytnutí služby je uzavřena okamžikem, kdy Poskytovatel potvrdí přijetí objednávky a Klient uhradí sjednanou cenu nebo zálohu. U fyzické prohlídky může být smlouva uzavřena i ústní dohodou potvrzenou Poskytovatelem.</p>
+      <p>Klient je povinen poskytnout pravdivé a úplné podklady potřebné pro provedení služby. V případě nepravdivých nebo neúplných podkladů nenese Poskytovatel odpovědnost za kvalitu nebo správnost výstupu.</p>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 4</div>
+    <div class="vop-title">Ceny a platební podmínky</div>
+    <div class="vop-body">
+      <p>Ceny služeb jsou uvedeny na webových stránkách Poskytovatele a jsou platné v okamžiku objednávky. Poskytovatel si vyhrazuje právo ceny měnit, přičemž změna ceny nemá vliv na již potvrzené objednávky.</p>
+      <ul>
+        <li><strong>Remote analýza:</strong> platba předem na základě potvrzení objednávky, bankovním převodem na účet Poskytovatele.</li>
+        <li><strong>Fyzická prohlídka:</strong> platba předem nebo v hotovosti na místě dle dohody. Cestovné se hradí dle skutečně ujetých kilometrů za cenu dohodnutou před zahájením služby.</li>
+        <li><strong>Zprostředkovatelská podpora:</strong> platební podmínky jsou stanoveny individuálně ve smlouvě.</li>
+      </ul>
+      <p>Poskytovatel není plátcem DPH. Vystavuje daňový doklad — fakturu — po přijetí platby nebo dle dohody.</p>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 5</div>
+    <div class="vop-title">Rozsah a omezení odpovědnosti</div>
+    <div class="vop-body">
+      <div class="highlight-box">
+        <p><strong>Odpovědnost Poskytovatele za případnou škodu vzniklou v souvislosti s poskytnutou službou je omezena na výši uhrazené ceny za tuto konkrétní službu.</strong></p>
+      </div>
+      <p>Poskytovatel neodpovídá zejména za:</p>
+      <ul>
+        <li>Škody vzniklé na základě rozhodnutí Klienta učiněného s využitím nebo bez využití výstupu Poskytovatele.</li>
+        <li>Skryté vady vozidla, které nebyly zjistitelné z dodaných podkladů nebo při fyzické prohlídce dostupnými prostředky.</li>
+        <li>Nepravdivé, neúplné nebo zkreslené informace v podkladech dodaných Klientem nebo třetími stranami.</li>
+        <li>Škody způsobené nesprávným použitím nebo interpretací výstupu Poskytovatele.</li>
+        <li>Budoucí poruchy, vady, náklady na opravy ani ztrátu hodnoty vozidla.</li>
+        <li>Stav vozidla po provedení služby — závěry platí výhradně pro stav v době prohlídky nebo analýzy.</li>
+      </ul>
+      <p>Fyzická prohlídka je prováděna vizuálně a dostupnými diagnostickými prostředky (tloušťkoměr laku, OBD diagnostika Delphi DS). Nezahrnuje demontáž součástí, endoskopickou prohlídku, tlakovou zkoušku ani jiné invazivní metody. Rozsah prohlídky odpovídá standardní předprodejní kontrole.</p>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 6</div>
+    <div class="vop-title">Dodací podmínky a termíny</div>
+    <div class="vop-body">
+      <p>Remote analýza je dodána elektronicky (e-mailem nebo dohodnutým komunikačním kanálem) zpravidla do 24 hodin od přijetí všech potřebných podkladů a potvrzení platby. V odůvodněných případech může být lhůta prodloužena, o čemž Poskytovatel Klienta informuje.</p>
+      <p>Termín fyzické prohlídky je sjednáván individuálně dle dostupnosti Poskytovatele a Klienta. Poskytovatel si vyhrazuje právo odmítnout prohlídku v lokalitě, která je mimo jeho provozní oblast (Vysočina a Východní Čechy) nebo pro kterou by cestovné bylo neúměrné.</p>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 7</div>
+    <div class="vop-title">Storno a odstoupení od smlouvy</div>
+    <div class="vop-body">
+      <p>Klient může zrušit objednávku Remote analýzy bezplatně, pokud tak učiní před zahájením zpracování. Po zahájení zpracování nebo po dodání výstupu nárok na vrácení ceny nevzniká.</p>
+      <p>Fyzickou prohlídku je možné zrušit bezplatně nejpozději 24 hodin před dohodnutým termínem. Při zrušení v kratší lhůtě nebo nedostavení se má Poskytovatel nárok na stornopoplatek ve výši 50 % sjednané ceny prohlídky.</p>
+      <p>Poskytovatel je oprávněn od smlouvy odstoupit, pokud Klient neposkytne potřebné podklady do 7 dnů od potvrzení objednávky, nebo pokud se ukáže, že provedení služby je z objektivních důvodů nemožné. V takovém případě bude uhrazená platba vrácena v plné výši.</p>
+      <p><strong>Spotřebitelé</strong> (fyzické osoby nepodnikající) mají v souladu s § 1829 zákona č. 89/2012 Sb. (občanský zákoník) právo odstoupit od smlouvy uzavřené distančním způsobem do 14 dnů bez udání důvodu, pokud dosud nebyla služba poskytnuta. Zahájením zpracování na výslovnou žádost Klienta před uplynutím lhůty toto právo zaniká.</p>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 8</div>
+    <div class="vop-title">Reklamace</div>
+    <div class="vop-body">
+      <p>Klient je oprávněn uplatnit reklamaci, pokud výstup Poskytovatele trpí vadami spočívajícími v zjevném opomenutí nebo chybě při zpracování dostupných podkladů. Reklamaci je nutné uplatnit písemně do 14 dnů od doručení výstupu.</p>
+      <p>Reklamace se nevztahuje na:</p>
+      <ul>
+        <li>Nespokojenost s výsledkem koupě vozidla nebo jeho následným stavem.</li>
+        <li>Skutečnosti, které nebyly z dodaných podkladů zjistitelné.</li>
+        <li>Subjektivní hodnocení, doporučení nebo prognózy obsažené ve výstupu.</li>
+        <li>Případy, kdy Klient nedodal úplné nebo pravdivé podklady.</li>
+      </ul>
+      <p>Oprávněná reklamace bude vyřešena opravou výstupu nebo přiměřenou slevou z ceny služby, a to do 30 dnů od jejího uplatnění.</p>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 9</div>
+    <div class="vop-title">Ochrana osobních údajů</div>
+    <div class="vop-body">
+      <p>Poskytovatel zpracovává osobní údaje Klienta (jméno, kontaktní údaje, informace o poptávaném vozidle) výhradně za účelem poskytnutí objednané služby, vedení účetní evidence a komunikace s Klientem. Právním základem zpracování je plnění smlouvy dle čl. 6 odst. 1 písm. b) nařízení GDPR.</p>
+      <p>Osobní údaje nejsou předávány třetím stranám s výjimkou zákonných povinností. Jsou uchovávány po dobu nezbytnou pro splnění účelu zpracování, nejdéle po dobu 5 let od ukončení smluvního vztahu.</p>
+      <p>Klient má právo na přístup ke svým údajům, jejich opravu, výmaz, omezení zpracování a právo podat stížnost u Úřadu pro ochranu osobních údajů (www.uoou.cz).</p>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 10</div>
+    <div class="vop-title">Duševní vlastnictví a mlčenlivost</div>
+    <div class="vop-body">
+      <p>Výstup poskytnuté služby (report, analýza, zpráva) je určen výhradně pro osobní potřebu Klienta. Klient není oprávněn výstup šířit, publikovat ani jinak zpřístupňovat třetím stranám bez předchozího písemného souhlasu Poskytovatele.</p>
+      <p>Poskytovatel se zavazuje zachovávat mlčenlivost o veškerých informacích sdělených Klientem v souvislosti s poskytovanou službou.</p>
+    </div>
+  </div>
+
+  <!-- 11 -->
+  <div class="vop-section">
+    <div class="vop-num">Článek 11</div>
+    <div class="vop-title">Závěrečná ustanovení</div>
+    <div class="vop-body">
+      <p>Tyto VOP se řídí právním řádem České republiky, zejména zákonem č. 89/2012 Sb. (občanský zákoník) a zákonem č. 634/1992 Sb. (zákon o ochraně spotřebitele).</p>
+      <p>Případné spory budou řešeny přednostně dohodou. V případě, že nedojde k mimosoudnímu řešení, je příslušný obecný soud Poskytovatele. Spotřebitelé mají právo využít mimosoudního řešení sporů prostřednictvím České obchodní inspekce (www.coi.cz).</p>
+      <p>Poskytovatel si vyhrazuje právo tyto VOP jednostranně měnit. Změna je účinná dnem zveřejnění na webových stránkách. Na objednávky podané před změnou se vztahuje znění VOP platné v době podání objednávky.</p>
+      <p>Pokud je nebo se stane některé ustanovení těchto VOP neplatným nebo neúčinným, ostatní ustanovení zůstávají v platnosti.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-copy">© 2025 David Stodůlka — DS AUTO · Bez keců</div>
+</footer>
+
+</body>
+</html>

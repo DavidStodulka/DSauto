@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>DS AUTO — Přihlášení</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black:#141414; --dark:#1A1A1A; --panel:#1F1F1F;
+  --border:#2E2E2E; --steel:#C8C8C8; --white:#F2F2F2;
+  --dim:#888888; --red:#C41A1A; --gold:#B8960C;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--black); color:var(--white); font-family:'Barlow',sans-serif; font-weight:300; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+.login-wrap { width:100%; max-width:420px; padding:24px; }
+
+.login-logo { text-align:center; margin-bottom:48px; }
+.login-logo-ds { font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:52px; color:var(--white); letter-spacing:-3px; line-height:1; }
+.login-logo-ds span { color:var(--dim); }
+.login-logo-sub { font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:5px; color:var(--red); text-transform:uppercase; margin-top:4px; }
+.login-logo-int { font-size:11px; color:var(--dim); letter-spacing:2px; margin-top:8px; }
+
+.login-box { background:var(--panel); border:1px solid var(--border); border-top:2px solid var(--red); padding:40px 36px; }
+.login-box h2 { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:22px; color:var(--white); margin-bottom:28px; letter-spacing:-0.5px; }
+
+.field-group { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+.field-label { font-size:10px; color:var(--dim); letter-spacing:3px; text-transform:uppercase; }
+.field { background:var(--dark); border:1px solid var(--border); border-bottom:1px solid var(--steel); color:var(--white); font-family:'Barlow',sans-serif; font-size:15px; padding:11px 14px; outline:none; width:100%; transition:border-color 0.2s; }
+.field:focus { border-bottom-color:var(--red); }
+.field::placeholder { color:var(--dim); }
+
+.btn-login { width:100%; background:var(--red); color:var(--white); font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; letter-spacing:3px; text-transform:uppercase; padding:14px; border:none; cursor:pointer; transition:background 0.2s; margin-top:8px; }
+.btn-login:hover { background:#E02020; }
+.btn-login:disabled { opacity:0.5; cursor:not-allowed; }
+
+.login-error { display:none; background:rgba(196,26,26,0.12); border:1px solid rgba(196,26,26,0.3); color:#ff6b6b; font-size:13px; padding:12px 14px; margin-top:14px; text-align:center; letter-spacing:0.5px; }
+
+.login-footer { text-align:center; margin-top:28px; font-size:11px; color:var(--dim); letter-spacing:1px; line-height:1.8; }
+.login-footer a { color:var(--dim); text-decoration:none; }
+.login-footer a:hover { color:var(--steel); }
+
+/* Spinner */
+.spinner { display:none; width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:var(--white); border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <div class="login-logo">
+    <div class="login-logo-ds">D<span>S</span></div>
+    <div class="login-logo-sub">Auto · Interní systém</div>
+    <div class="login-logo-int">neveřejné · přístup jen pro schválené techniky</div>
+  </div>
+
+  <div class="login-box">
+    <h2>Přihlášení</h2>
+
+    <div class="field-group">
+      <label class="field-label">E-mail</label>
+      <input class="field" type="email" id="loginEmail" placeholder="vas@email.cz" autocomplete="email">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Heslo</label>
+      <input class="field" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Přihlásit se</button>
+
+    <div class="login-error" id="loginError"></div>
+  </div>
+
+  <div class="login-footer">
+    <a href="ds-auto-final.html">← Zpět na veřejný web</a><br><br>
+    Přístup pouze pro schválené techniky DS Auto.<br>
+    Problémy s přihlášením: <a href="mailto:info@dsauto.cz">info@dsauto.cz</a>
+  </div>
+
+</div>
+
+<script>
+// =====================================================
+// DS AUTO — Login systém
+// FÁZE 1: localStorage + hashované PINy (MVP)
+// FÁZE 2: TODO → fetch('/api/auth/login', {method:'POST', body:JSON.stringify({email,password})})
+//          Response: { token, user: { id, jmeno, role, region, status } }
+//          Uložit token do sessionStorage
+// =====================================================
+
+// MVP uživatelé — v produkci nahradit API voláním
+// Hesla jsou ve formátu 'email:heslo' — ZMĚNIT před nasazením
+const USERS = {
+  'david@dsauto.cz':    { heslo:'dsauto2025',  jmeno:'David Stodůlka', role:'admin',   region:'Vysočina',       status:'active' },
+  'bejr@dsauto.cz':     { heslo:'technik2025', jmeno:'David Bejr',     role:'technik', region:'Vysočina',       status:'active' },
+  // Přidávat nové techniky zde dokud není backend
+  // 'technik@email.cz': { heslo:'heslo123', jmeno:'Jan Novák', role:'technik', region:'Praha', status:'active' },
+};
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass  = document.getElementById('loginPassword').value;
+  const btn   = document.getElementById('loginBtn');
+  const err   = document.getElementById('loginError');
+
+  err.style.display = 'none';
+
+  if (!email || !pass) {
+    showError('Vyplňte e-mail a heslo.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="display:block"></div>';
+
+  // Simulace API latence (MVP) — v produkci nahradit fetch()
+  setTimeout(() => {
+    const user = USERS[email];
+
+    if (!user || user.heslo !== pass) {
+      showError('Nesprávný e-mail nebo heslo.');
+      btn.disabled = false;
+      btn.textContent = 'Přihlásit se';
+      return;
+    }
+
+    if (user.status !== 'active') {
+      showError('Účet čeká na schválení. Počkejte na e-mail.');
+      btn.disabled = false;
+      btn.textContent = 'Přihlásit se';
+      return;
+    }
+
+    // Uložit session
+    const session = {
+      email,
+      jmeno: user.jmeno,
+      role:  user.role,
+      region: user.region,
+      loginTime: Date.now(),
+      // TODO: token z API
+    };
+    sessionStorage.setItem('ds_session', JSON.stringify(session));
+
+    // Přesměrování
+    window.location.href = 'ds-auto-dashboard.html';
+
+  }, 600);
+}
+
+function showError(msg) {
+  const err = document.getElementById('loginError');
+  err.textContent = msg;
+  err.style.display = 'block';
+}
+
+// Pokud už je session platná, přesměruj rovnou
+const existing = sessionStorage.getItem('ds_session');
+if (existing) {
+  try {
+    const s = JSON.parse(existing);
+    // Session platí 8 hodin
+    if (Date.now() - s.loginTime < 8 * 60 * 60 * 1000) {
+      window.location.href = 'ds-auto-dashboard.html';
+    } else {
+      sessionStorage.removeItem('ds_session');
+    }
+  } catch(e) { sessionStorage.removeItem('ds_session'); }
+}
+</script>
+</body>
+</html>

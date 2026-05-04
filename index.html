@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DS AUTO — Síť nezávislých prověřovačů</title>
+<meta name="description" content="DS AUTO — nezávislé prověření ojetých vozidel. Síť certifikovaných techniků po celé ČR. Remote analýza 999 Kč, fyzická prohlídka 3 499 Kč.">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('DOPLNIT_PUBLIC_KEY');</script>
+<style>
+:root {
+  --black: #141414;
+  --dark: #1A1A1A;
+  --panel: #1F1F1F;
+  --border: #2E2E2E;
+  --steel: #C8C8C8;
+  --white: #F2F2F2;
+  --dim: #888888;
+  --red: #C41A1A;
+  --red-bright: #E02020;
+  --gold: #B8960C;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 300;
+}
+
+/* ===== EDIT MODE ===== */
+body.edit-mode [data-editable] {
+  outline: 1px dashed var(--red);
+  cursor: text;
+  min-width: 20px;
+  min-height: 1em;
+}
+body.edit-mode [data-editable]:focus { outline: 1px solid var(--red); background: rgba(196,26,26,0.05); }
+
+.edit-bar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.edit-btn {
+  padding: 10px 22px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.edit-btn-toggle { background: var(--panel); color: var(--dim); border: 1px solid var(--border); }
+.edit-btn-toggle:hover, .edit-btn-toggle.active { background: var(--red); color: var(--white); border-color: var(--red); }
+.edit-btn-save { background: var(--red); color: var(--white); display: none; }
+.edit-btn-save:hover { background: var(--red-bright); }
+.edit-hint { font-size: 11px; color: var(--dim); display: none; }
+body.edit-mode .edit-hint { display: block; }
+body.edit-mode .edit-btn-save { display: block; }
+
+/* ===== NAV ===== */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: rgba(20,20,20,0.97);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+}
+.logo { display: flex; align-items: baseline; text-decoration: none; }
+.logo-ds {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  color: var(--white);
+  letter-spacing: -2px;
+}
+.logo-ds span { color: var(--dim); }
+.logo-right { margin-left: 10px; }
+.logo-auto { font-family: 'Barlow Condensed', sans-serif; font-weight: 300; font-size: 20px; color: var(--steel); letter-spacing: 6px; display: block; }
+.logo-tagline { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 600; color: var(--red); letter-spacing: 4px; display: block; margin-top: 1px; }
+
+.hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; background: none; border: none; }
+.hamburger span { display: block; width: 24px; height: 1.5px; background: var(--steel); transition: all 0.3s; }
+.hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(4px,4px); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4px,-4px); }
+
+.nav-tabs { display: flex; gap: 0; list-style: none; }
+.nav-tabs li a {
+  display: block;
+  padding: 8px 18px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--dim);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-tabs li a:hover, .nav-tabs li a.active { color: var(--white); border-bottom-color: var(--red); }
+.nav-tabs li a.cta-tab {
+  margin-left: 8px;
+  background: var(--red);
+  color: var(--white) !important;
+  border-bottom: none !important;
+  padding: 8px 20px;
+}
+.nav-tabs li a.cta-tab:hover { background: var(--red-bright); }
+
+@media (max-width: 900px) {
+  .hamburger { display: flex; }
+  .nav-tabs {
+    display: none;
+    position: absolute;
+    top: 68px; left: 0; right: 0;
+    flex-direction: column;
+    background: rgba(20,20,20,0.99);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+  }
+  .nav-tabs.open { display: flex; }
+  .nav-tabs li a { padding: 14px 32px; border-bottom: none; border-left: 2px solid transparent; font-size: 14px; }
+  .nav-tabs li a:hover, .nav-tabs li a.active { border-left-color: var(--red); border-bottom: none; }
+  .nav-tabs li a.cta-tab { margin: 8px 32px; }
+}
+
+/* ===== COMMON ===== */
+section { position: relative; z-index: 1; }
+.section-inner { max-width: 1280px; margin: 0 auto; padding: 96px 32px; }
+.section-header { margin-bottom: 64px; }
+.section-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 6px;
+  color: var(--red);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.section-label::before { content: ''; display: block; width: 40px; height: 1px; background: var(--red); flex-shrink: 0; }
+.section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(38px, 5vw, 72px);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 15px 38px;
+  background: var(--red);
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s;
+  cursor: pointer;
+  border: none;
+}
+.btn-primary:hover { background: var(--red-bright); }
+
+.btn-ghost {
+  display: inline-block;
+  padding: 15px 38px;
+  border: 1px solid var(--border);
+  color: var(--steel);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+  cursor: pointer;
+  background: none;
+}
+.btn-ghost:hover { border-color: var(--steel); color: var(--white); }
+
+.btn-gold {
+  display: inline-block;
+  padding: 15px 38px;
+  background: var(--gold);
+  color: var(--white);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s;
+  cursor: pointer;
+  border: none;
+}
+.btn-gold:hover { background: #D4A820; }
+
+@media (max-width: 500px) { .section-inner { padding: 72px 20px; } }
+
+/* ===== HERO ===== */
+#domov {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px 32px 80px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.hero-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 6px;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.hero-eyebrow::before { content: ''; display: block; width: 40px; height: 1px; background: var(--red); flex-shrink: 0; }
+.hero-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(60px, 10vw, 140px);
+  line-height: 0.92;
+  letter-spacing: -2px;
+  margin-bottom: 36px;
+}
+.hero-title em { font-style: normal; color: var(--dim); }
+.hero-sub { font-size: 18px; font-weight: 300; color: var(--steel); max-width: 560px; line-height: 1.7; margin-bottom: 40px; }
+
+.story-card {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  padding: 36px 40px;
+  max-width: 680px;
+  margin-bottom: 44px;
+  position: relative;
+}
+.story-card::before {
+  content: 'POZNÁVÁTE SE?';
+  position: absolute;
+  top: -10px; left: 32px;
+  background: var(--panel);
+  padding: 0 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--red);
+}
+.story-card p { font-size: 14px; color: var(--dim); line-height: 1.85; margin-bottom: 12px; }
+.story-card p:last-child { margin-bottom: 0; color: var(--steel); font-weight: 400; }
+
+.hero-cta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 64px; }
+
+.hero-stats { display: flex; gap: 56px; padding-top: 40px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.stat-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 44px; color: var(--white); line-height: 1; }
+.stat-label { font-size: 11px; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; }
+
+@media (max-width: 500px) { #domov { padding: 110px 20px 60px; } .story-card { padding: 28px 24px; } .hero-stats { gap: 28px; } }
+
+/* ===== SERVICES ===== */
+#sluzby { background: var(--dark); border-top: 1px solid var(--border); }
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.service-card { background: var(--panel); padding: 44px 36px; transition: background 0.2s; }
+.service-card:hover { background: #222; }
+.service-card.featured { border-top: 2px solid var(--red); }
+.service-tier { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 5px; color: var(--red); text-transform: uppercase; margin-bottom: 16px; }
+.service-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 30px; color: var(--white); margin-bottom: 14px; line-height: 1; }
+.service-desc { font-size: 14px; color: var(--dim); line-height: 1.7; margin-bottom: 28px; }
+.service-includes { list-style: none; margin-bottom: 36px; }
+.service-includes li { font-size: 13px; color: var(--steel); padding: 9px 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+.service-includes li::before { content: '—'; color: var(--red); font-weight: 700; flex-shrink: 0; }
+.service-price { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 52px; color: var(--white); line-height: 1; }
+.service-price span { font-size: 18px; font-weight: 300; color: var(--dim); margin-left: 4px; }
+.service-note { font-size: 12px; color: var(--dim); margin-top: 8px; letter-spacing: 1px; }
+
+/* ===== JAK TO FUNGUJE ===== */
+#jak-to-funguje { border-top: 1px solid var(--border); }
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.step-card { background: var(--panel); padding: 36px 32px; }
+.step-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 64px;
+  color: var(--border);
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.step-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: var(--white); margin-bottom: 10px; }
+.step-desc { font-size: 13px; color: var(--dim); line-height: 1.75; }
+
+/* ===== TÝM ===== */
+#tym { background: var(--dark); border-top: 1px solid var(--border); }
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 64px;
+}
+.team-card { background: var(--panel); padding: 48px 40px; transition: background 0.2s; }
+.team-card:hover { background: #222; }
+.team-card.lead { border-top: 2px solid var(--red); }
+.team-photo {
+  width: 64px; height: 64px;
+  border: 1px solid var(--border);
+  background: var(--dark);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--dim);
+  letter-spacing: -1px;
+  overflow: hidden;
+}
+.team-photo img { width: 100%; height: 100%; object-fit: cover; }
+.team-role { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 5px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; }
+.team-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 36px; color: var(--white); line-height: 1; margin-bottom: 20px; letter-spacing: -1px; }
+.team-bio { font-size: 14px; color: var(--dim); line-height: 1.85; margin-bottom: 28px; }
+.team-bio strong { color: var(--steel); font-weight: 400; }
+.team-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.team-tag { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); border: 1px solid var(--border); padding: 4px 12px; }
+
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+.how-card { background: var(--panel); padding: 32px 28px; }
+.how-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 48px; color: var(--border); line-height: 1; margin-bottom: 16px; }
+.how-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; color: var(--white); margin-bottom: 10px; }
+.how-desc { font-size: 13px; color: var(--dim); line-height: 1.75; }
+
+@media (max-width: 768px) {
+  .team-grid { grid-template-columns: 1fr; }
+  .how-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== O MNĚ ===== */
+#o-mne { border-top: 1px solid var(--border); }
+
+.about-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 72px; align-items: start; }
+@media (max-width: 768px) { .about-grid { grid-template-columns: 1fr; gap: 40px; } .about-facts { position: static !important; } .contact-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+.about-chapter { margin-bottom: 40px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+.about-chapter:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.about-chapter-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 4px; color: var(--red); text-transform: uppercase; margin-bottom: 16px; }
+.about-chapter p { font-size: 15px; color: var(--steel); line-height: 1.85; margin-bottom: 16px; }
+.about-chapter p:last-child { margin-bottom: 0; }
+.about-chapter p strong { color: var(--white); font-weight: 500; }
+
+.about-facts { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); position: sticky; top: 88px; }
+.fact-row { background: var(--panel); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.fact-label { font-size: 11px; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; flex-shrink: 0; }
+.fact-value { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--white); text-align: right; }
+
+.praxis-block { border: 1px solid var(--border); background: var(--panel); padding: 48px 44px; margin-top: 64px; position: relative; }
+.praxis-label { position: absolute; top: -10px; left: 32px; background: var(--panel); padding: 0 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 4px; color: var(--red); }
+.praxis-block h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 28px; color: var(--white); margin-bottom: 28px; line-height: 1.1; }
+.praxis-block p { font-size: 14px; color: var(--dim); line-height: 1.85; margin-bottom: 16px; }
+.praxis-block p.highlight { color: var(--steel); font-size: 15px; font-weight: 400; border-left: 2px solid var(--red); padding-left: 20px; margin: 28px 0; }
+.praxis-block p:last-child { margin-bottom: 0; }
+
+@media (max-width: 500px) { .praxis-block { padding: 40px 24px; } }
+
+/* ===== FRANŠÍZA — TECHNICI ===== */
+#technici {
+  background: var(--dark);
+  border-top: 1px solid var(--border);
+}
+
+.franchise-hero {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--gold);
+  padding: 56px 56px 48px;
+  margin-bottom: 64px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+@media (max-width: 768px) { .franchise-hero { grid-template-columns: 1fr; gap: 32px; padding: 36px 28px; } }
+
+.franchise-eyebrow {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.franchise-eyebrow::before { content: ''; display: block; width: 40px; height: 1px; background: var(--gold); flex-shrink: 0; }
+
+.franchise-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1;
+  letter-spacing: -1px;
+  margin-bottom: 24px;
+}
+.franchise-title em { font-style: normal; color: var(--gold); }
+
+.franchise-sub { font-size: 16px; color: var(--steel); line-height: 1.7; margin-bottom: 32px; }
+
+.earnings-box {
+  background: var(--dark);
+  border: 1px solid var(--border);
+  padding: 32px 36px;
+}
+.earnings-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.earnings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.earnings-row:last-child { border-bottom: none; }
+.earnings-label { font-size: 13px; color: var(--dim); }
+.earnings-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  color: var(--white);
+  letter-spacing: -1px;
+}
+.earnings-value.gold { color: var(--gold); }
+.earnings-note { font-size: 11px; color: var(--dim); margin-top: 16px; line-height: 1.6; }
+
+.franchise-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+.franchise-card { background: var(--panel); padding: 36px 32px; }
+.franchise-card-icon { font-size: 32px; margin-bottom: 16px; }
+.franchise-card-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: var(--white); margin-bottom: 10px; }
+.franchise-card-desc { font-size: 13px; color: var(--dim); line-height: 1.75; }
+
+.franchise-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+.franchise-step { background: var(--panel); padding: 32px 28px; position: relative; }
+.franchise-step-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 56px;
+  color: var(--border);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.franchise-step-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; color: var(--white); margin-bottom: 8px; }
+.franchise-step-desc { font-size: 13px; color: var(--dim); line-height: 1.7; }
+
+.franchise-requirements {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--gold);
+  padding: 32px 36px;
+  margin-bottom: 48px;
+}
+.franchise-req-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 18px; color: var(--white); margin-bottom: 20px; }
+.franchise-req-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 48px; }
+@media (max-width: 600px) { .franchise-req-grid { grid-template-columns: 1fr; } }
+.franchise-req-item { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--steel); padding: 6px 0; }
+.franchise-req-item::before { content: '—'; color: var(--gold); flex-shrink: 0; }
+
+/* ===== KONTAKT ===== */
+#kontakt { border-top: 1px solid var(--border); }
+
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
+.contact-intro { font-size: 17px; color: var(--steel); line-height: 1.75; margin-bottom: 36px; }
+.contact-methods { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+.contact-row { background: var(--panel); padding: 22px 24px; display: flex; align-items: center; gap: 18px; text-decoration: none; transition: background 0.2s; }
+.contact-row:hover { background: #222; }
+.contact-icon { width: 38px; height: 38px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; color: var(--dim); }
+.contact-detail-label { font-size: 10px; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.contact-detail-value { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 17px; color: var(--white); }
+
+.contact-tabs { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 24px; }
+.contact-tab-btn {
+  flex: 1;
+  padding: 12px 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--dim);
+  background: var(--panel);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.contact-tab-btn:hover { background: #222; color: var(--steel); }
+.contact-tab-btn.active { background: var(--dark); color: var(--white); border-bottom: 2px solid var(--red); }
+.contact-tab-btn.gold-tab.active { border-bottom-color: var(--gold); color: var(--gold); }
+
+.contact-form-panel { display: none; }
+.contact-form-panel.active { display: block; }
+
+.contact-form { display: flex; flex-direction: column; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-label { font-size: 10px; color: var(--dim); letter-spacing: 3px; text-transform: uppercase; }
+.form-input, .form-select, .form-textarea {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--white);
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  padding: 13px 16px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--steel); }
+.form-textarea { min-height: 110px; resize: vertical; }
+.form-select option { background: var(--panel); }
+.form-status { display: none; padding: 12px 16px; font-size: 13px; letter-spacing: 1px; margin-bottom: 8px; }
+
+/* ===== FOOTER ===== */
+footer { background: var(--dark); border-top: 1px solid var(--border); }
+.footer-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 48px;
+}
+@media (max-width: 768px) { .footer-inner { grid-template-columns: 1fr; gap: 32px; } }
+
+.footer-logo-area { }
+.footer-logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 32px; color: var(--white); letter-spacing: -2px; }
+.footer-logo span { color: var(--dim); }
+.footer-tagline { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; letter-spacing: 5px; color: var(--red); text-transform: uppercase; margin-top: 4px; }
+.footer-desc { font-size: 13px; color: var(--dim); line-height: 1.7; margin-top: 16px; }
+
+.footer-links-title { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 4px; color: var(--red); text-transform: uppercase; margin-bottom: 16px; }
+.footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.footer-links li a { font-size: 14px; color: var(--dim); text-decoration: none; transition: color 0.2s; }
+.footer-links li a:hover { color: var(--white); }
+
+.footer-bottom {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-copy { font-size: 12px; color: var(--dim); letter-spacing: 1px; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero-eyebrow { animation: fadeUp 0.5s ease both; }
+.hero-title { animation: fadeUp 0.5s 0.08s ease both; }
+.hero-sub { animation: fadeUp 0.5s 0.16s ease both; }
+.story-card { animation: fadeUp 0.5s 0.22s ease both; }
+.hero-cta { animation: fadeUp 0.5s 0.28s ease both; }
+.hero-stats { animation: fadeUp 0.5s 0.36s ease both; }
+</style>
+</head>
+<body>
+
+<!-- EDIT BAR -->
+<div class="edit-bar">
+  <span class="edit-hint">Klikni na text a edituj</span>
+  <button class="edit-btn edit-btn-save" onclick="saveContent()">Uložit</button>
+  <button class="edit-btn edit-btn-toggle" id="editToggle" onclick="toggleEdit()">Upravit texty</button>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#domov" class="logo">
+      <div class="logo-ds">D<span>S</span></div>
+      <div class="logo-right">
+        <span class="logo-auto">AUTO</span>
+        <span class="logo-tagline">BEZ KECŮ</span>
+      </div>
+    </a>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-tabs" id="navTabs">
+      <li><a href="#domov" class="active">Domů</a></li>
+      <li><a href="#sluzby">Služby</a></li>
+      <li><a href="#jak-to-funguje">Jak to funguje</a></li>
+      <li><a href="#tym">Kdo jsme</a></li>
+      <li><a href="#o-mne">O mně</a></li>
+      <li><a href="#technici">Pro techniky</a></li>
+      <li><a href="#kontakt" class="cta-tab">Objednat</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section>
+  <div id="domov">
+    <div class="hero-eyebrow" data-editable>Síť nezávislých prověřovačů · Celá ČR</div>
+    <h1 class="hero-title">Prověření<br><em>bez</em> keců.</h1>
+    <p class="hero-sub" data-editable>Ojeté auto je loterie — pokud nevíte co hledáte. Naši technici vědí. Řekneme vám přesně co kupujete, nebo proč to nekupovat. Bez oslazování, bez servítků.</p>
+
+    <div class="story-card">
+      <p data-editable>Viděli jste auto. Červené, lesklé, vonělo kůží a možností. Říkali jste si že tohle není nutnost — ale proč ne, zasloužíte si to. Prodejce byl příjemný, ukázal vám jak skvěle sedíte za volantem. Splátka? Zvládnutelná. Produkty k tomu? Přece jen malá částka navíc pro klid v duši.</p>
+      <p data-editable>Podepsali jste. Odjeli jste šťastní. A pak přišla realita. Kontrolka. Nečekaná oprava. Splátka která najednou bolí víc než měla.</p>
+      <p data-editable>Já vím kde se to pokazilo. A příště vám to řeknu předem.</p>
+    </div>
+
+    <div class="hero-cta">
+      <a href="#sluzby" class="btn-primary">Zobrazit služby</a>
+      <a href="#kontakt" class="btn-ghost">Nezávazně napsat</a>
+    </div>
+
+    <div class="hero-stats">
+      <div><div class="stat-num" data-editable>8+</div><div class="stat-label" data-editable>Let v automotive</div></div>
+      <div><div class="stat-num" data-editable>70%</div><div class="stat-label" data-editable>Problémů vidím pouhým okem</div></div>
+      <div><div class="stat-num" data-editable>24h</div><div class="stat-label" data-editable>Remote odpověď</div></div>
+      <div><div class="stat-num" data-editable>ČR</div><div class="stat-label" data-editable>Pokrytá síť techniků</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICES ===== -->
+<section id="sluzby">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-label">Co nabízíme</div>
+      <h2 class="section-title">Služby</h2>
+    </div>
+    <div class="services-grid">
+
+      <div class="service-card">
+        <div class="service-tier">Remote</div>
+        <div class="service-name" data-editable>Kompletní analýza</div>
+        <div class="service-desc" data-editable>Posíláte VIN + fotky + inzerát. Dostanete úplný obraz — co auto skrývá, co stojí za to opravit, a argumenty pro vyjednávání ceny. Buď to uděláme pořádně, nebo vůbec.</div>
+        <ul class="service-includes">
+          <li data-editable>Historie vozidla + VIN dekódování</li>
+          <li data-editable>Analýza fotek — karoserie, interiér, podvozek</li>
+          <li data-editable>Tržní ocenění a srovnání</li>
+          <li data-editable>Vyjednávací argumenty</li>
+          <li data-editable>Jasné doporučení — koupit nebo ne</li>
+          <li data-editable>Odpověď do 24 hodin</li>
+        </ul>
+        <div class="service-price" data-editable>999 <span>Kč</span></div>
+        <div class="service-note" data-editable>Bez cestování — celá ČR</div>
+      </div>
+
+      <div class="service-card featured">
+        <div class="service-tier">Fyzická prohlídka</div>
+        <div class="service-name" data-editable>Na místě</div>
+        <div class="service-desc" data-editable>Technik přijede, kouká, změří, připojí. Profesionální diagnostika, tloušťkoměr laku, zkušené oko. Řeknete nám kde auto je a my vám řekneme co za to stojí.</div>
+        <ul class="service-includes">
+          <li data-editable>Vizuální prohlídka karoserie</li>
+          <li data-editable>Měření tloušťky laku</li>
+          <li data-editable>OBD diagnostika</li>
+          <li data-editable>Kontrola podvozku a interiéru</li>
+          <li data-editable>Písemný závěr + doporučení</li>
+          <li data-editable>Konzultace na místě bez omezení</li>
+        </ul>
+        <div class="service-price" data-editable>3 499 <span>Kč</span></div>
+        <div class="service-note" data-editable>+ cestovné · Technik ve vašem regionu</div>
+      </div>
+
+      <div class="service-card">
+        <div class="service-tier">Vyjednávání</div>
+        <div class="service-name" data-editable>Zastoupení při koupi</div>
+        <div class="service-desc" data-editable>Přijedeme s vámi. Prověříme auto na místě, vyjednáme cenu. Z každé vyjednané slevy bereme 10% — zbytek šetříte vy.</div>
+        <ul class="service-includes">
+          <li data-editable>Fyzická prohlídka v ceně</li>
+          <li data-editable>Aktivní vyjednávání ceny</li>
+          <li data-editable>Konzultace smlouvy</li>
+          <li data-editable>Asistence při podpisu</li>
+          <li data-editable>10% provize z vyjednané slevy</li>
+        </ul>
+        <div class="service-price" data-editable>10 <span>% ze slevy</span></div>
+        <div class="service-note" data-editable>+ cena fyzické prohlídky · Celá ČR</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== JAK TO FUNGUJE ===== -->
+<section id="jak-to-funguje">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-label">Postup</div>
+      <h2 class="section-title">Jak to funguje</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-title">Pošlete nám auto</div>
+        <div class="step-desc">VIN číslo nebo odkaz na inzerát. U fyzické prohlídky adresu. To je vše co potřebujeme pro start.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-title">Zaplatíte předem</div>
+        <div class="step-desc">Bankovní převod nebo hotovost na místě. Remote 999 Kč, fyzická 3 499 Kč + cestovné. Žádné skryté poplatky.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-title">Technik prověří</div>
+        <div class="step-desc">Remote do 24 hodin. Fyzická prohlídka dle termínu. Certifikovaný technik z naší sítě ve vašem regionu.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <div class="step-title">Dostanete výstup</div>
+        <div class="step-desc">Písemný report. Jasné ANO nebo NE. Reálná hodnota auta. Argumenty pro vyjednávání. Bez diplomatických omluvenek.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TÝM ===== -->
+<section id="tym">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-label">Za DS Auto stojí</div>
+      <h2 class="section-title">Kdo jsme</h2>
+    </div>
+
+    <div class="team-grid">
+      <div class="team-card lead">
+        <div class="team-photo">DS</div>
+        <div class="team-role">Zakladatel · Analytik</div>
+        <div class="team-name" data-editable>David Stodůlka</div>
+        <div class="team-bio" data-editable>Někdo říká že je pedant. Má to jinak — říká tomu systém.<br><br>
+          Každé vozidlo prochází strukturovanou analýzou která nenechává nic na náhodě. Tři roky detailingu ho naučily vidět pod povrch. Šest let v bazaru — z toho dva ve vedení — ho naučily jak trh funguje zevnitř. Dnes prodává nové vozy u Škody a ve volném čase flipuje ojetá auta pro vlastní radost. <strong>Člověk na obou stranách transakce.</strong></div>
+        <div class="team-tags">
+          <span class="team-tag">Systematická analýza</span>
+          <span class="team-tag">VW Group</span>
+          <span class="team-tag">Diesel</span>
+          <span class="team-tag">OBD diagnostika</span>
+          <span class="team-tag">Tloušťkoměr laku</span>
+        </div>
+      </div>
+
+      <div class="team-card">
+        <div class="team-photo">DB</div>
+        <div class="team-role">Výkupní technik · Mechanik</div>
+        <div class="team-name" data-editable>David Bejr</div>
+        <div class="team-bio" data-editable>Sedm let výkupní technik. To není číslo — je to tisíce aut, stovky rozhodnutí denně, praxe kterou se nedá nastudovat.<br><br>
+          David Bejr ví co se děje když auto přijede na výkup. Viděl každý trik. Každý pokus zakrýt pravdu. Automechanik na částečný úvazek — takže to co ostatní hádají, on ví. <strong>Ruce v motoru, hlava v číslech.</strong></div>
+        <div class="team-tags">
+          <span class="team-tag">Výkupní diagnostika</span>
+          <span class="team-tag">Technický stav</span>
+          <span class="team-tag">Mechanické závady</span>
+          <span class="team-tag">Terénní prověření</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-bottom:32px;">
+      <div class="section-label">Přístup</div>
+      <h3 class="section-title" style="font-size:clamp(28px,4vw,48px);">Jak pracujeme</h3>
+    </div>
+
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-num">01</div>
+        <div class="how-title">Systém, ne pocit</div>
+        <div class="how-desc">Každé prověření probíhá podle strukturovaného postupu. Nic se nevynechává, nic se neodhaduje. Výsledek není dojem — je to zdokumentovaný závěr.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">02</div>
+        <div class="how-title">Celý obraz</div>
+        <div class="how-desc">Nezajímá nás jen aktuální stav vozidla. Zajímá nás příběh — jak bylo auto používáno, servisováno, jaké opravy proběhly a co to říká o budoucích nákladech.</div>
+      </div>
+      <div class="how-card">
+        <div class="how-num">03</div>
+        <div class="how-title">Jasné slovo</div>
+        <div class="how-desc">Nedostanete diplomatickou omluvenku. Dostanete přímou odpověď — koupit nebo nekoupit, za kolik a proč. Vždy na vaší straně, nikdy na straně prodejce.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== O MNĚ ===== -->
+<section id="o-mne">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-label">Příběh zakladatele</div>
+      <h2 class="section-title">O mně</h2>
+    </div>
+    <div class="about-grid">
+      <div class="about-text">
+        <div class="about-chapter">
+          <div class="about-chapter-title">Začalo to v garáži</div>
+          <p data-editable>Nejdřív byl děda. Inženýr, který strávil roky na vývoji Škody v době kdy se auta ještě opravdu vyvíjela — ne optimalizovala pro marži. Od malička jsem vyrůstal v prostředí kde auto nebyla věc, byl to objekt úcty. Děda mi nikdy neřekl jak auto funguje. Ukázal mi to.</p>
+          <p data-editable>Klíč v ruce jsem měl dřív než řidičák. A tenhle vztah ke strojům mě nikdy neopustil.</p>
+        </div>
+        <div class="about-chapter">
+          <div class="about-chapter-title">Tři roky jsem dělal auta krásnými</div>
+          <p data-editable>Detailing mě naučil jednu věc kterou se v žádné škole nenaučíte — vidět auto beze lží. Když strávíte stovky hodin s autem pod správným světlem, poznáte každý trik. Přelakovanou karoserii. Vytmelovený práh. Chemicky ošetřený motor aby vypadal jako nový.</p>
+          <p data-editable><strong>Naučil jsem se číst auta jako knihy. A většina z nich lže.</strong></p>
+        </div>
+        <div class="about-chapter">
+          <div class="about-chapter-title">Pak přišel bazár. A realita.</div>
+          <p data-editable>Šest let autobazaru. Z toho dva jako vedoucí. Tady jsem pochopil jak celý trh skutečně funguje. Viděl jsem jak se staví inzeráty aby zakryly pravdu aniž by technicky lhaly. Jak se píší záruky plné výjimek. Jak fungují úvěry které zákazníkovi vypadají jako záchrana a jsou past.</p>
+          <p data-editable>Nebyl jsem divák. Byl jsem uvnitř systému. A právě proto dnes vím přesně kde jsou háčky které běžný kupující nikdy neuvidí.</p>
+        </div>
+        <div class="about-chapter">
+          <div class="about-chapter-title">Dnes stojím na vaší straně</div>
+          <p data-editable>Prodávám nové vozy u Škody. Ve volném čase flipuji ojetá auta pro vlastní radost. Nejsem teoretik ani youtuber s názorem. Jsem člověk který v tomto prostředí žije každý den, na obou stranách transakce.</p>
+          <p data-editable><strong>Bez keců. Vždycky.</strong></p>
+        </div>
+      </div>
+      <div>
+        <div class="about-facts">
+          <div class="fact-row"><span class="fact-label">Zkušenosti</span><span class="fact-value" data-editable>8+ let automotive</span></div>
+          <div class="fact-row"><span class="fact-label">Detailing</span><span class="fact-value" data-editable>3 roky</span></div>
+          <div class="fact-row"><span class="fact-label">Bazár / vedoucí</span><span class="fact-value" data-editable>6 let / 2 roky</span></div>
+          <div class="fact-row"><span class="fact-label">Specializace</span><span class="fact-value" data-editable>VW Group, diesel</span></div>
+          <div class="fact-row"><span class="fact-label">Diagnostika</span><span class="fact-value" data-editable>Delphi DS, VCDS</span></div>
+          <div class="fact-row"><span class="fact-label">Oblast fyzicky</span><span class="fact-value" data-editable>Vysočina, Vých. Čechy</span></div>
+          <div class="fact-row"><span class="fact-label">Remote</span><span class="fact-value" data-editable>Celá ČR</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="praxis-block">
+      <div class="praxis-label">Z PRAXE</div>
+      <h3 data-editable>Muž, sen a 100 000 najetých kilometrů za půl roku</h3>
+      <p data-editable>Přišel muž s jasným cílem. Ne s jasnou hlavou — s jasným cílem. Červené RS, sportovní volant, výfuk který to dával okolí vědět. Viděl v tom víc než auto. Viděl v tom sebe.</p>
+      <p data-editable>Cena? Pět set tisíc. Úvěr na šest let. K tomu balíček produktů — pojištění schopnosti splácet, prodloužená záruka, ochrana laku. Dalších padesát tisíc. Co ty produkty reálně pokrývaly? Vzduch v pěkném obalu a provizi pro prodejce.</p>
+      <p class="highlight" data-editable>Za měsíc přivezl auto zpět na výkup. Vykoupeno za čtyři sta tisíc. Ztráta sto tisíc za třicet dní.</p>
+      <p data-editable>Za dva měsíce přišel znovu. Stejné auto — za pět dvacet. Koupil ho. Znovu na úvěr. Po půl roce, se stem tisíc najetých kilometrů navíc, přivezl auto potřetí. Tři sta devadesát. Za šest měsíců utratil částku která by mu dvakrát zaplatila solidní ojeté auto bez úvěru.</p>
+      <p data-editable>Nikdo mu cestou neřekl stop. <strong>Jeden hovor předem. To je celý rozdíl.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FRANŠÍZA — TECHNICI ===== -->
+<section id="technici">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-label" style="color:var(--gold)">Pro techniky</div>
+      <h2 class="section-title">Vydělávej<br><em style="color:var(--gold)">pod naší</em> značkou.</h2>
+    </div>
+
+    <div class="franchise-hero">
+      <div>
+        <div class="franchise-eyebrow">DS Auto síť techniků</div>
+        <div class="franchise-title">Máš znalosti.<br>My máme <em>klienty.</em></div>
+        <div class="franchise-sub" data-editable>Jsi mechanik, výkupní technik nebo automotive odborník? Přidej se do sítě DS Auto. My přivedeme zakázky, ty je zpracuješ. Žádné startovní poplatky, žádné závazky. Jen výsledky.</div>
+        <a href="#kontakt" class="btn-gold" onclick="openTechnikTab()">Chci se přidat</a>
+      </div>
+      <div>
+        <div class="earnings-box">
+          <div class="earnings-title">Jak to vychází — kalkulace</div>
+          <div class="earnings-row">
+            <span class="earnings-label">Remote analýza (999 Kč)</span>
+            <span class="earnings-value">899 Kč</span>
+          </div>
+          <div class="earnings-row">
+            <span class="earnings-label">DS Auto provize (10%)</span>
+            <span class="earnings-value" style="color:var(--dim);font-size:20px;">−100 Kč</span>
+          </div>
+          <div class="earnings-row">
+            <span class="earnings-label">Fyzická prohlídka</span>
+            <span class="earnings-value">3 149 Kč</span>
+          </div>
+          <div class="earnings-row">
+            <span class="earnings-label">DS Auto provize (10%)</span>
+            <span class="earnings-value" style="color:var(--dim);font-size:20px;">−350 Kč</span>
+          </div>
+          <div class="earnings-row" style="border-top:1px solid var(--border);margin-top:8px;padding-top:16px;">
+            <span class="earnings-label">5× remote + 2× fyzická/měsíc</span>
+            <span class="earnings-value gold">10 795 Kč</span>
+          </div>
+          <div class="earnings-note">+ 10% z každé vyjednané slevy pro klienta. Pracuješ ve svém regionu, ve svém čase.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Co dostaneš -->
+    <div class="section-header" style="margin-bottom:32px;">
+      <div class="section-label" style="color:var(--gold)">Výhody sítě</div>
+      <h3 class="section-title" style="font-size:clamp(28px,4vw,48px);">Co dostaneš</h3>
+    </div>
+
+    <div class="franchise-grid">
+      <div class="franchise-card">
+        <div class="franchise-card-icon">📥</div>
+        <div class="franchise-card-title">Leady bez námahy</div>
+        <div class="franchise-card-desc">Zakázky z webu dsauto.cz jdou přímo k tobě do regionu. Ty jen vykonáš práci — my řešíme marketing a akvizici.</div>
+      </div>
+      <div class="franchise-card">
+        <div class="franchise-card-icon">🏷️</div>
+        <div class="franchise-card-title">Silná značka</div>
+        <div class="franchise-card-desc">Pracuješ pod DS AUTO — značkou s autoritou, obsahem a důvěrou. Nemusíš budovat brand od nuly.</div>
+      </div>
+      <div class="franchise-card">
+        <div class="franchise-card-icon">🛠️</div>
+        <div class="franchise-card-title">Nástroje a systém</div>
+        <div class="franchise-card-desc">Přístup k internímu checklistu, šablonám reportů a smluv. Strukturovaný postup který ti šetří čas.</div>
+      </div>
+      <div class="franchise-card">
+        <div class="franchise-card-icon">💰</div>
+        <div class="franchise-card-title">Férová provize</div>
+        <div class="franchise-card-desc">DS Auto bere 10% za zprostředkování. Zbytek je tvůj. Žádné startovní poplatky, žádné měsíční členství.</div>
+      </div>
+      <div class="franchise-card">
+        <div class="franchise-card-icon">📍</div>
+        <div class="franchise-card-title">Vlastní region</div>
+        <div class="franchise-card-desc">Každý technik má přidělený region. Zakázky z tvé oblasti jdou primárně k tobě. Žádná vnitřní konkurence.</div>
+      </div>
+      <div class="franchise-card">
+        <div class="franchise-card-icon">📈</div>
+        <div class="franchise-card-title">Škálovatelné</div>
+        <div class="franchise-card-desc">Začni s remote analýzami. Přidej fyzické prohlídky. Přidej vyjednávání. Výdělek roste s tvými kapacitami.</div>
+      </div>
+    </div>
+
+    <!-- Jak se přidat -->
+    <div class="section-header" style="margin-bottom:32px;margin-top:64px;">
+      <div class="section-label" style="color:var(--gold)">Postup</div>
+      <h3 class="section-title" style="font-size:clamp(28px,4vw,48px);">Jak se přidat</h3>
+    </div>
+
+    <div class="franchise-steps">
+      <div class="franchise-step">
+        <div class="franchise-step-num">01</div>
+        <div class="franchise-step-title">Napiš nám</div>
+        <div class="franchise-step-desc">Krátké představení — kdo jsi, jaké máš zkušenosti, z jakého regionu jsi. Formulář níže nebo přímo na email.</div>
+      </div>
+      <div class="franchise-step">
+        <div class="franchise-step-num">02</div>
+        <div class="franchise-step-title">Pohovor</div>
+        <div class="franchise-step-desc">Krátký online hovor. Chceme znát tvůj přístup k práci a co umíš. Ne CV — reálná zkušenost.</div>
+      </div>
+      <div class="franchise-step">
+        <div class="franchise-step-num">03</div>
+        <div class="franchise-step-title">Onboarding</div>
+        <div class="franchise-step-desc">Přístup do systému, šablony, checklist. Projdeme postup na jedné reálné zakázce společně.</div>
+      </div>
+      <div class="franchise-step">
+        <div class="franchise-step-num">04</div>
+        <div class="franchise-step-title">První zakázka</div>
+        <div class="franchise-step-desc">Dostaneš první lead do regionu. Zpracuješ, reportuješ. DS Auto zkontroluje kvalitu a vyplatí podíl.</div>
+      </div>
+    </div>
+
+    <!-- Požadavky -->
+    <div class="franchise-requirements">
+      <div class="franchise-req-title">Co od tebe očekáváme</div>
+      <div class="franchise-req-grid">
+        <div class="franchise-req-item">Minimálně 3 roky v automotive (mechanik, bazár, fleet, servis)</div>
+        <div class="franchise-req-item">Vlastní základní vybavení (tloušťkoměr je výhoda, ne podmínka)</div>
+        <div class="franchise-req-item">Zodpovědný přístup — report do 24 hodin od prohlídky</div>
+        <div class="franchise-req-item">Komunikace bez keců — stejný standard jako DS Auto</div>
+        <div class="franchise-req-item">Živnostenský list nebo ochota si ho zřídit</div>
+        <div class="franchise-req-item">Smartphone pro fotodokumentaci a komunikaci</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== KONTAKT ===== -->
+<section id="kontakt">
+  <div class="section-inner">
+    <div class="section-header">
+      <div class="section-label">Nezávazně</div>
+      <h2 class="section-title">Kontakt</h2>
+    </div>
+    <div class="contact-grid">
+      <div>
+        <p class="contact-intro" data-editable>Máte auto na mušce? Nebo chcete do sítě? Napište — bez závazků, bez keců.</p>
+        <div class="contact-methods">
+          <a href="mailto:info@dsauto.cz" class="contact-row">
+            <div class="contact-icon">✉</div>
+            <div>
+              <div class="contact-detail-label">E-mail</div>
+              <div class="contact-detail-value" data-editable>info@dsauto.cz</div>
+            </div>
+          </a>
+          <a href="tel:+420000000000" class="contact-row">
+            <div class="contact-icon">✆</div>
+            <div>
+              <div class="contact-detail-label">Telefon / WhatsApp</div>
+              <div class="contact-detail-value" data-editable>+420 000 000 000</div>
+            </div>
+          </a>
+          <a href="#" class="contact-row">
+            <div class="contact-icon">f</div>
+            <div>
+              <div class="contact-detail-label">Facebook</div>
+              <div class="contact-detail-value" data-editable>DS Auto</div>
+            </div>
+          </a>
+          <a href="#" class="contact-row">
+            <div class="contact-icon">▶</div>
+            <div>
+              <div class="contact-detail-label">TikTok / Instagram</div>
+              <div class="contact-detail-value" data-editable>@dsauto</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <div class="contact-tabs">
+          <button class="contact-tab-btn active" id="tabKlient" onclick="switchTab('klient')">Pro klienty</button>
+          <button class="contact-tab-btn gold-tab" id="tabTechnik" onclick="switchTab('technik')">Pro techniky</button>
+        </div>
+
+        <!-- Klientský formulář -->
+        <div class="contact-form-panel active" id="panelKlient">
+          <div class="contact-form">
+            <div class="form-group">
+              <label class="form-label">Vaše jméno *</label>
+              <input type="text" class="form-input" id="cf_jmeno" placeholder="Jan Novák">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kontakt (telefon nebo e-mail) *</label>
+              <input type="text" class="form-input" id="cf_kontakt" placeholder="+420 123 456 789 nebo email">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Typ prověření</label>
+              <select class="form-select" id="cf_typ">
+                <option>Remote analýza — 999 Kč</option>
+                <option>Fyzická prohlídka — 3 499 Kč + cestovné</option>
+                <option>Zastoupení při koupi — 10% ze slevy</option>
+                <option>Nevím, poradíte mi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">VIN nebo odkaz na inzerát</label>
+              <textarea class="form-textarea" id="cf_vin" placeholder="Vložte VIN číslo, odkaz na inzerát, nebo popište co potřebujete..."></textarea>
+            </div>
+            <div class="form-status" id="cf_status"></div>
+            <button class="btn-primary" style="width:100%;" onclick="sendForm('klient')">Odeslat poptávku</button>
+            <div style="font-size:11px;color:var(--dim);margin-top:8px;letter-spacing:1px;">Odpovíme do 24 hodin. Bez závazků.</div>
+          </div>
+        </div>
+
+        <!-- Technik formulář -->
+        <div class="contact-form-panel" id="panelTechnik">
+          <div class="contact-form">
+            <div class="form-group">
+              <label class="form-label">Jméno a příjmení *</label>
+              <input type="text" class="form-input" id="tf_jmeno" placeholder="Jan Novák">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kontakt *</label>
+              <input type="text" class="form-input" id="tf_kontakt" placeholder="+420 123 456 789 nebo email">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Region (kraj / město)</label>
+              <input type="text" class="form-input" id="tf_region" placeholder="Vysočina, Pardubice, Praha...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Zkušenosti v automotive</label>
+              <select class="form-select" id="tf_zkusenosti">
+                <option>3–5 let</option>
+                <option>5–10 let</option>
+                <option>10+ let</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Krátké představení — co umíš, odkud jsi</label>
+              <textarea class="form-textarea" id="tf_bio" placeholder="Mechanik 7 let, specializace diesel, VW Group. Mám tloušťkoměr a OBD. Hledám vedlejší příjem..."></textarea>
+            </div>
+            <div class="form-status" id="tf_status"></div>
+            <button class="btn-gold" style="width:100%;border:none;cursor:pointer;" onclick="sendForm('technik')">Chci se přidat do sítě</button>
+            <div style="font-size:11px;color:var(--dim);margin-top:8px;letter-spacing:1px;">Ozvu se do 48 hodin.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo-area">
+      <div class="footer-logo">D<span>S</span></div>
+      <div class="footer-tagline">BEZ KECŮ</div>
+      <div class="footer-desc" data-editable>Síť nezávislých prověřovačů ojetých vozidel. Remote analýza pro celou ČR. Fyzické prohlídky ve vašem regionu.</div>
+    </div>
+    <div>
+      <div class="footer-links-title">Pro klienty</div>
+      <ul class="footer-links">
+        <li><a href="#sluzby">Služby a ceník</a></li>
+        <li><a href="#jak-to-funguje">Jak to funguje</a></li>
+        <li><a href="#tym">Kdo jsme</a></li>
+        <li><a href="#o-mne">O zakladateli</a></li>
+        <li><a href="ds-auto-vop.html">VOP</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-links-title">Pro techniky</div>
+      <ul class="footer-links">
+        <li><a href="#technici">Přidej se do sítě</a></li>
+        <li><a href="#technici">Kalkulace výdělku</a></li>
+        <li><a href="#technici">Požadavky</a></li>
+        <li><a href="#kontakt" onclick="switchTab('technik')">Kontakt pro techniky</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy" data-editable>© 2025 David Stodůlka — DS AUTO · Síť nezávislých prověřovačů</div>
+    <div style="display:flex;gap:24px;">
+      <a href="ds-auto-vop.html" style="font-size:12px;color:var(--dim);text-decoration:none;">VOP</a>
+      <a href="ds-auto-smlouva.html" style="font-size:12px;color:var(--dim);text-decoration:none;">Smlouva</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ===== NAV =====
+const navLinks = document.querySelectorAll('.nav-tabs a:not(.cta-tab)');
+const sectionIds = ['domov','sluzby','jak-to-funguje','tym','o-mne','technici','kontakt'];
+
+window.addEventListener('scroll', () => {
+  let current = 'domov';
+  sectionIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && window.scrollY >= el.offsetTop - 120) current = id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+
+navLinks.forEach(a => {
+  a.addEventListener('click', () => {
+    document.getElementById('navTabs').classList.remove('open');
+    document.getElementById('hamburger').classList.remove('open');
+  });
+});
+
+document.querySelector('.cta-tab')?.addEventListener('click', () => {
+  document.getElementById('navTabs').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+});
+
+function toggleMenu() {
+  document.getElementById('navTabs').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+
+// ===== CONTACT TABS =====
+function switchTab(tab) {
+  document.querySelectorAll('.contact-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.contact-form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+function openTechnikTab() {
+  setTimeout(() => switchTab('technik'), 300);
+}
+
+// ===== FORMS =====
+function sendForm(type) {
+  if (type === 'klient') {
+    const jmeno = document.getElementById('cf_jmeno').value.trim();
+    const kontakt = document.getElementById('cf_kontakt').value.trim();
+    const typ = document.getElementById('cf_typ').value;
+    const vin = document.getElementById('cf_vin').value.trim();
+    const status = document.getElementById('cf_status');
+    const btn = document.querySelector('#panelKlient .btn-primary');
+
+    if (!jmeno || !kontakt) {
+      showStatus(status, 'error', 'Vyplňte prosím jméno a kontakt.');
+      return;
+    }
+
+    btn.textContent = 'Odesílám...';
+    btn.disabled = true;
+
+    emailjs.send('DOPLNIT_SERVICE_ID', 'DOPLNIT_TEMPLATE_ID', {
+      typ_formular: 'KLIENT',
+      from_name: jmeno,
+      kontakt,
+      typ_proveri: typ,
+      vin_inzerat: vin || 'Nevyplněno',
+      reply_to: kontakt.includes('@') ? kontakt : 'info@dsauto.cz'
+    }).then(() => {
+      showStatus(status, 'ok', 'Odesláno. Ozvu se do 24 hodin.');
+      btn.textContent = 'Odesláno ✓';
+      ['cf_jmeno','cf_kontakt','cf_vin'].forEach(id => document.getElementById(id).value = '');
+    }).catch(() => {
+      showStatus(status, 'error', 'Chyba. Napište přímo na info@dsauto.cz');
+      btn.textContent = 'Odeslat poptávku';
+      btn.disabled = false;
+    });
+
+  } else {
+    const jmeno = document.getElementById('tf_jmeno').value.trim();
+    const kontakt = document.getElementById('tf_kontakt').value.trim();
+    const region = document.getElementById('tf_region').value.trim();
+    const zk = document.getElementById('tf_zkusenosti').value;
+    const bio = document.getElementById('tf_bio').value.trim();
+    const status = document.getElementById('tf_status');
+    const btn = document.querySelector('#panelTechnik .btn-gold');
+
+    if (!jmeno || !kontakt) {
+      showStatus(status, 'error', 'Vyplňte prosím jméno a kontakt.');
+      return;
+    }
+
+    btn.textContent = 'Odesílám...';
+    btn.disabled = true;
+
+    emailjs.send('DOPLNIT_SERVICE_ID', 'DOPLNIT_TEMPLATE_ID', {
+      typ_formular: 'TECHNIK',
+      from_name: jmeno,
+      kontakt,
+      region: region || 'Neuvedeno',
+      zkusenosti: zk,
+      bio: bio || 'Neuvedeno',
+      reply_to: kontakt.includes('@') ? kontakt : 'info@dsauto.cz'
+    }).then(() => {
+      showStatus(status, 'ok', 'Přihláška odeslána. Ozvu se do 48 hodin.');
+      btn.textContent = 'Odesláno ✓';
+      ['tf_jmeno','tf_kontakt','tf_region','tf_bio'].forEach(id => document.getElementById(id).value = '');
+    }).catch(() => {
+      showStatus(status, 'error', 'Chyba. Napište přímo na info@dsauto.cz');
+      btn.textContent = 'Chci se přidat do sítě';
+      btn.disabled = false;
+    });
+  }
+}
+
+function showStatus(el, type, msg) {
+  el.style.display = 'block';
+  el.style.background = type === 'ok' ? 'rgba(26,122,26,0.15)' : 'rgba(196,26,26,0.15)';
+  el.style.color = type === 'ok' ? '#4CAF50' : '#ff6b6b';
+  el.textContent = msg;
+}
+
+// ===== EDIT MODE =====
+let editMode = false;
+
+function getEditables() { return document.querySelectorAll('[data-editable]'); }
+
+function toggleEdit() {
+  editMode = !editMode;
+  document.body.classList.toggle('edit-mode', editMode);
+  const toggle = document.getElementById('editToggle');
+  toggle.classList.toggle('active', editMode);
+  toggle.textContent = editMode ? 'Ukončit úpravy' : 'Upravit texty';
+  getEditables().forEach(el => el.contentEditable = editMode ? 'true' : 'false');
+  if (editMode) loadSavedContent();
+}
+
+function saveContent() {
+  const data = {};
+  getEditables().forEach((el, i) => { data[i] = el.innerHTML; });
+  localStorage.setItem('dsauto_v2', JSON.stringify(data));
+  const btn = document.querySelector('.edit-btn-save');
+  btn.textContent = 'Uloženo ✓';
+  btn.style.background = '#1a6b1a';
+  setTimeout(() => { btn.textContent = 'Uložit'; btn.style.background = ''; }, 2000);
+}
+
+function loadSavedContent() {
+  try {
+    const saved = localStorage.getItem('dsauto_v2');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    getEditables().forEach((el, i) => { if (data[i] !== undefined) el.innerHTML = data[i]; });
+  } catch(e) {}
+}
+
+// Init
+getEditables().forEach(el => el.contentEditable = 'false');
+loadSavedContent();
+</script>
+</body>
+</html>
